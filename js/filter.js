@@ -8,7 +8,13 @@ let appCallbacks = {};
 export async function initFilterModule(callbacks) {
     appCallbacks = callbacks;
     bindFilterEventListeners();
-    await initializeFilterDataSource();
+    try {
+        await initializeFilterDataSource();
+    } catch (error) {
+        console.error("Stopping app initialization due to database error.");
+        // The error is already displayed to the user by initDatabase, so we just stop here.
+        return;
+    }
     state.callbacks.confirmGoBackToFilters = callbacks.confirmGoBackToFilters;
 }
 
@@ -50,23 +56,17 @@ function bindFilterEventListeners() {
 }
 
 async function initializeFilterDataSource() {
-    try {
-        await initDatabase(); // This handles fetch, progress bar, and populating DB
-        
-        if (dom.loadingOverlay) {
-            dom.loadingOverlay.classList.add('fade-out');
-            dom.loadingOverlay.addEventListener('transitionend', () => {
-                dom.loadingOverlay.style.display = 'none';
-            }, { once: true });
-        }
-        
-        await populateFilterControls();
-        await onFilterStateChange();
-
-    } catch (error) {
-        // Error is already displayed by initDatabase
-        console.error("Stopping app initialization due to database error.");
+    await initDatabase(); // This handles fetch, progress bar, and populating DB
+    
+    if (dom.loadingOverlay) {
+        dom.loadingOverlay.classList.add('fade-out');
+        dom.loadingOverlay.addEventListener('transitionend', () => {
+            dom.loadingOverlay.style.display = 'none';
+        }, { once: true });
     }
+    
+    await populateFilterControls();
+    await onFilterStateChange();
 }
 
 
@@ -184,7 +184,7 @@ async function updateDependentFilters() {
     } else {
         topicElements.toggleBtn.disabled = false;
         const relevantTopics = await db.questions.where('classification.subject').anyOf(selectedSubjects).uniqueKeys('classification.topic');
-        populateMultiSelect('topic', relevantTopics);
+        populateMultiSelect('topic', Array.from(relevantTopics).sort());
     }
 
     if (selectedTopics.length === 0) {
@@ -194,7 +194,7 @@ async function updateDependentFilters() {
     } else {
         subTopicElements.toggleBtn.disabled = false;
         const relevantSubTopics = await db.questions.where('classification.subject').anyOf(selectedSubjects).and(q => selectedTopics.includes(q.classification.topic)).uniqueKeys('classification.subTopic');
-        populateMultiSelect('subTopic', relevantSubTopics);
+        populateMultiSelect('subTopic', Array.from(relevantSubTopics).sort());
     }
 }
 
@@ -235,30 +235,31 @@ async function applyFilters(filters = state.selectedFilters) {
 
 async function updateAllFilterCountsAndAvailability() {
     for (const filterKey of config.filterKeys) {
+        // Build a base query using all *other* active filters.
         let baseQuery = db.questions.toCollection();
         
-        // Build a query based on all *other* active filters
         for (const otherKey of config.filterKeys) {
-            if (otherKey === filterKey) continue;
+            if (otherKey === filterKey) continue; // Skip the current filter key
             const selected = state.selectedFilters[otherKey];
             if (selected.length > 0) {
                 const valuePath = getQuestionValuePath(otherKey);
-                // Year is a number, others are strings
+                // Handle year which is a number
                 const values = (otherKey === 'examYear') ? selected.map(y => parseInt(y, 10)) : selected;
                 baseQuery = baseQuery.where(valuePath).anyOf(values);
             }
         }
         
+        // Get all possible unique options for the current filter key, based on the *current* state of other filters.
         const valuePath = getQuestionValuePath(filterKey);
-        const allOptionsForThisKey = (await db.questions.orderBy(valuePath).uniqueKeys()).filter(Boolean);
-        
+        const allOptionsForThisKey = (await baseQuery.clone().uniqueKeys(valuePath)).filter(Boolean);
+
+        // For each option, clone the base query and get the count.
         const countPromises = allOptionsForThisKey.map(option => {
             const valueForQuery = (filterKey === 'examYear') ? parseInt(String(option), 10) : option;
-            // Dexie's where().equals() is highly optimized for indexed fields.
-            // Chaining where() clauses creates an intersection of results.
             return baseQuery.clone().where(valuePath).equals(valueForQuery).count();
         });
 
+        // Await all the count promises to run them in parallel.
         const countsArray = await Promise.all(countPromises);
         
         const counts = {};
@@ -266,9 +267,11 @@ async function updateAllFilterCountsAndAvailability() {
             counts[option] = countsArray[index];
         });
 
+        // Update the UI with the new counts.
         updateFilterUI(filterKey, counts);
     }
 }
+
 
 function updateFilterUI(filterKey, counts) {
     const { list, segmentedControl } = dom.filterElements[filterKey];
@@ -277,7 +280,10 @@ function updateFilterUI(filterKey, counts) {
             const checkbox = label.querySelector('input');
             const value = checkbox.value;
             const count = counts[value] || 0;
-            label.querySelector('.filter-option-count').textContent = `(${count})`;
+            const countSpan = label.querySelector('.filter-option-count');
+            if (countSpan) countSpan.textContent = `(${count})`;
+            
+            // Disable option if it yields 0 results AND is not already selected
             const isDisabled = count === 0 && !checkbox.checked;
             label.classList.toggle('disabled', isDisabled);
             checkbox.disabled = isDisabled;
@@ -287,7 +293,8 @@ function updateFilterUI(filterKey, counts) {
         segmentedControl.querySelectorAll('.segmented-btn').forEach(btn => {
             const value = btn.dataset.value;
             const count = counts[value] || 0;
-            btn.querySelector('.filter-option-count').textContent = `(${count})`;
+            const countSpan = btn.querySelector('.filter-option-count');
+            if (countSpan) countSpan.textContent = `(${count})`;
             btn.classList.toggle('active', state.selectedFilters[filterKey].includes(value));
         });
     }
@@ -396,7 +403,10 @@ function updateActiveFiltersSummaryBar() {
             closeBtn.className = 'tag-close-btn';
             closeBtn.innerHTML = '&times;';
             closeBtn.setAttribute('aria-label', `Remove ${value} filter`);
-            closeBtn.onclick = () => handleSelectionChange(key, value);
+            closeBtn.onclick = async () => {
+                // Modifying handleSelectionChange to be async requires this await
+                await handleSelectionChange(key, value); 
+            };
             
             tag.appendChild(closeBtn);
             dom.activeFiltersSummaryBar.appendChild(tag);
