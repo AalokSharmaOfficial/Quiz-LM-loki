@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz LM</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="index.css">
+    
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.23.0",
+    "vite": "https://aistudiocdn.com/vite@^7.1.10",
+    "path": "https://aistudiocdn.com/path@^0.12.7",
+    "url": "https://aistudiocdn.com/url@^0.11.4"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+
+<body data-theme="light">
+    <!-- START: Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="loader-content">
+            <lottie-player src="https://assets3.lottiefiles.com/packages/lf20_fitybppd.json" background="transparent" speed="1" style="width: 200px; height: 200px;" loop autoplay></lottie-player>
+            <p id="loading-text">Wait calmly, your questions are getting loaded.</p>
+            <div class="loading-progress-container">
+                <div id="loading-progress-bar"></div>
+            </div>
+            <span id="loading-percentage">0%</span>
+        </div>
+    </div>
+    <!-- END: Loading Overlay -->
+
+    <!-- START: Fireball HTML Elements (10 balls) -->
+    <div id="fireball1" class="fireball"></div>
+    <div id="fireball2" class="fireball"></div>
+    <div id="fireball3" class="fireball"></div>
+    <div id="fireball4" class="fireball"></div>
+    <div id="fireball5" class="fireball"></div>
+    <div id="fireball6" class="fireball"></div>
+    <div id="fireball7" class="fireball"></div>
+    <div id="fireball8" class="fireball"></div>
+    <div id="fireball9" class="fireball"></div>
+    <div id="fireball10" class="fireball"></div>
+    <!-- END: Fireball HTML Elements -->
+
+    <!-- ==================================================================== -->
+    <!-- ==== NEW FILTER SECTION - THE NEW HOMEPAGE ==== -->
+    <!-- ==================================================================== -->
+    <section id="filter-section" class="container">
+        <h1>Customize Your Quiz</h1>
+        <p class="filter-subtitle">Select your criteria to build a targeted practice session, or get started instantly.</p>
+
+        <div class="quick-start-section">
+            <h3>🚀 Quick Start</h3>
+            <div class="quick-start-buttons">
+                <button class="quick-start-btn" data-preset="quick_25_easy">Quick 25 Easy</button>
+                <button class="quick-start-btn" data-preset="quick_25_moderate">Quick 25 Moderate</button>
+                <button class="quick-start-btn" data-preset="quick_25_hard">Quick 25 Hard</button>
+                <button class="quick-start-btn" data-preset="quick_25_mix">Quick 25 Mix Level</button>
+            </div>
+        </div>
+        
+        <div class="filter-grid">
+            <!-- Classification Filters -->
+            <div class="filter-group">
+                <h3><i class="fas fa-sitemap"></i> By Classification</h3>
+                <div class="filter-control">
+                    <label for="subject-toggle-btn">Subject</label>
+                    <div class="custom-multiselect" id="subject-multiselect-container">
+                        <button id="subject-toggle-btn" class="multiselect-toggle-btn">Select Subjects</button>
+                        <div id="subject-dropdown" class="multiselect-dropdown-panel" style="display: none;">
+                            <input type="text" id="subject-search-input" class="multiselect-search-input" placeholder="Search subjects...">
+                            <div id="subject-list" class="multiselect-list-container"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="filter-control">
+                    <label for="topic-toggle-btn">Topic</label>
+                     <div class="custom-multiselect" id="topic-multiselect-container">
+                        <button id="topic-toggle-btn" class="multiselect-toggle-btn">Select Topics</button>
+                        <div id="topic-dropdown" class="multiselect-dropdown-panel" style="display: none;">
+                            <input type="text" id="topic-search-input" class="multiselect-search-input" placeholder="Search topics...">
+                            <div id="topic-list" class="multiselect-list-container"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="filter-control">
+                    <label for="subTopic-toggle-btn">Sub-Topic</label>
+                     <div class="custom-multiselect" id="subTopic-multiselect-container">
+                        <button id="subTopic-toggle-btn" class="multiselect-toggle-btn">Select Sub-Topics</button>
+                        <div id="subTopic-dropdown" class="multiselect-dropdown-panel" style="display: none;">
+                            <input type="text" id="subTopic-search-input" class="multiselect-search-input" placeholder="Search sub-topics...">
+                            <div id="subTopic-list" class="multiselect-list-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Difficulty & Type Filters -->
+            <div class="filter-group">
+                <h3><i class="fas fa-layer-group"></i> By Properties</h3>
+                <div class="filter-control">
+                    <label>Difficulty</label>
+                    <div id="difficulty-segmented-control" class="segmented-control">
+                        <!-- JS will populate -->
+                    </div>
+                </div>
+                <div class="filter-control">
+                    <label>Question Type</label>
+                     <div id="questionType-segmented-control" class="segmented-control">
+                        <!-- JS will populate -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Source Filters -->
+            <div class="filter-group">
+                <h3><i class="fas fa-file-alt"></i> By Source</h3>
+                <div class="filter-control">
+                    <label for="examName-toggle-btn">Exam Name</label>
+                    <div class="custom-multiselect" id="examName-multiselect-container">
+                        <button id="examName-toggle-btn" class="multiselect-toggle-btn">Select Exam Names</button>
+                        <div id="examName-dropdown" class="multiselect-dropdown-panel" style="display: none;">
+                             <input type="text" id="examName-search-input" class="multiselect-search-input" placeholder="Search exam names...">
+                            <div id="examName-list" class="multiselect-list-container"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="filter-control">
+                    <label for="examYear-toggle-btn">Exam Year</label>
+                    <div class="custom-multiselect" id="examYear-multiselect-container">
+                        <button id="examYear-toggle-btn" class="multiselect-toggle-btn">Select Exam Years</button>
+                        <div id="examYear-dropdown" class="multiselect-dropdown-panel" style="display: none;">
+                            <input type="text" id="examYear-search-input" class="multiselect-search-input" placeholder="Search years...">
+                            <div id="examYear-list" class="multiselect-list-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <!-- Tags Filter -->
+            <div class="filter-group">
+                <h3><i class="fas fa-tags"></i> By Tags</h3>
+                <div class="filter-control">
+                    <label for="tags-toggle-btn">Tag</label>
+                    <div class="custom-multiselect" id="tags-multiselect-container">
+                        <button id="tags-toggle-btn" class="multiselect-toggle-btn">Select Tags</button>
+                        <div id="tags-dropdown" class="multiselect-dropdown-panel" style="display: none;">
+                            <input type="text" id="tags-search-input" class="multiselect-search-input" placeholder="Search tags...">
+                            <div id="tags-list" class="multiselect-list-container">
+                                <!-- JS will populate this -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="active-filters-summary-bar-container" style="display: none;">
+            <h3>Active Filters</h3>
+            <div id="active-filters-summary-bar"></div>
+        </div>
+
+        <div class="filter-actions">
+            <button id="reset-filters-btn"><i class="fas fa-undo"></i> Reset Filters</button>
+            <button id="start-quiz-btn" disabled>
+                <span id="start-quiz-text">Start Quiz</span> 
+                (<span id="question-count">0</span> Questions)
+            </button>
+        </div>
+    </section>
+
+   <!-- ==================================================================== -->
+    <!-- ==== THIS IS YOUR MAIN QUIZ CONTAINER - HIDDEN BY DEFAULT ==== -->
+    <!-- ==================================================================== -->
+    <div class="quiz-breadcrumb-container" style="display: none;">
+        <div class="container" style="max-width: 850px; padding: 0 10px; margin: 0 auto;"> 
+            <div id="dynamic-breadcrumb" class="quiz-breadcrumb">
+                <!-- DYNAMICALLY POPULATED BREADCRUMB -->
+            </div>
+        </div>
+    </div>
+    <div id="quiz-main-container" class="container" style="display: none;"> 
+        <button id="nav-menu-icon" aria-label="Open Navigation Menu" aria-controls="navigation-panel" aria-expanded="false">
+            <div class="hamburger-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </button>
+    
+        <button id="fullscreen-btn" aria-label="Toggle Full Screen Mode">
+            <i class="fas fa-expand"></i>
+        </button>
+        <div id="navigation-panel">
+            <div class="nav-panel-content"><!-- Populated by JS --></div>
+            <div class="nav-panel-actions">
+            </div>
+            <div class="nav-panel-footer">
+                <button id="submit-quiz-btn" class="button-primary">
+                    <i class="fas fa-check-double"></i> Submit & Review All
+                </button>
+            </div>
+        </div>
+        <div id="nav-overlay"></div>
+
+        <div id="quiz-section">
+            <div class="quiz-header-bar">
+                <h1 id="quiz-title">ANCIENT HISTORY NTPC UG 2025 57 SHIFTS <span class="icon"><i class="fas fa-question-circle"></i></span></h1>
+                <button id="toggle-header-btn" title="Toggle Details Panel" aria-expanded="true" aria-controls="collapsible-header-content"><i class="fas fa-chevron-up"></i></button>
+            </div>
+
+            <div id="collapsible-header-content">
+                <div id="quiz-progress-bar-container"><div id="quiz-progress-bar"></div></div>
+                <div id="status-tracker"></div>
+                <div class="timer-lifeline-area">
+                     <div class="controls-left">
+                         <div id="timer">Time Left: <span id="time-left">60</span>s</div>
+                     </div>
+                     <div class="controls-right">
+                          <button id="zoom-out-btn" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+                          <button id="zoom-in-btn" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+                          <button id="ai-explainer-btn" title="Get AI Explanation (Available after answering)"><i class="fas fa-wand-magic-sparkles"></i></button>
+                          <button id="lifeline-btn">50:50</button>
+                          <button id="settings-btn" title="Settings"><i class="fas fa-cog"></i></button>
+                     </div>
+                </div>
+                <div id="timer-bar-container"> <div id="timer-bar"></div> </div>
+            </div>
+            
+             <div id="quiz-container" class="quiz-container">
+                 <div class="question-numbering-area">
+                    <div class="q-area-left-group">
+                        <span id="sequential-question-number"></span>
+                        <button id="bookmark-btn" title="Bookmark Question"><i class="far fa-star"></i></button>
+                    </div>
+                    <div class="q-area-center-group">
+                        <span id="exam-name-tag" class="context-tag"></span>
+                        <span id="exam-date-shift-tag" class="context-tag"></span>
+                    </div>
+                    <span id="actual-question-number"></span>
+                 </div>
+                 <h2 id="question-text"></h2> 
+                 <div id="options" class="options"></div> 
+                 <div id="explanation"></div>
+             </div>
+             <div class="button-group">
+                <button id="next-btn" style="display: none;">Next Question</button>
+            </div>
+            <div id="quiz-nav-bar">
+                <button id="prev-question-btn" class="quiz-nav-btn">
+                    <i class="fas fa-arrow-left"></i> Previous
+                </button>
+                <button id="mark-review-btn" class="quiz-nav-btn">
+                        <i class="far fa-flag"></i> Mark for Review
+                </button>
+                <button id="next-question-btn" class="quiz-nav-btn">
+                    Next <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="final-score-section" style="display: none;">
+             <div class="final-score-container">
+                 <!-- DYNAMICALLY UPDATED TITLE -->
+                 <h1 id="score-title">Quiz Result - ANCIENT HISTORY NTPC UG 2025 57 SHIFTS</h1>
+                 <div id="score-remark"></div>
+                 <div id="score-visuals-container">
+                    <div id="score-donut-chart-container">
+                        <!-- SVG donut chart will be injected here by JS -->
+                    </div>
+                    <div id="score-stats-container">
+                        <div class="stat-item">
+                            <span class="stat-label">Accuracy Rate</span>
+                            <div class="progress-bar-container">
+                                <div id="accuracy-progress-bar" class="progress-bar-fill"></div>
+                            </div>
+                            <span id="accuracy-percentage" class="stat-value">0%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Completion Rate</span>
+                            <div class="progress-bar-container">
+                                <div id="completion-progress-bar" class="progress-bar-fill"></div>
+                            </div>
+                            <span id="completion-percentage" class="stat-value">0%</span>
+                        </div>
+                    </div>
+                </div>
+                 <div id="score-summary-list"></div>
+                 <div class="button-group">
+                     <button id="review-btn">Review Answers</button>
+                     <button id="restart-btn">Restart Current Group</button>
+                     <button id="share-results-btn">Share Results <i class="fas fa-share-alt"></i></button>
+                     <button id="restart-full-quiz-btn">Restart Full Quiz</button>
+                     </div>
+                 </div>
+             </div>
+        </div>
+
+         <div id="review-section" style="display: none;">
+
+              <!-- DYNAMICALLY UPDATED TITLE -->
+              <h1 id="review-title">Review Answer - ANCIENT HISTORY NTPC UG 2025 57 SHIFTS</h1>
+            <div class="quiz-container">
+              <div class="controls-area"> 
+
+                <div class="filter-controls">
+                    <span>Filter by:</span>
+                    <div class="filter-btn-group">
+                        <button id="filter-all" class="filter-btn active" data-filter="all">All</button>
+                        <button id="filter-correct" class="filter-btn" data-filter="correct">Correct</button>
+                        <button id="filter-wrong" class="filter-btn" data-filter="wrong">Incorrect</button>
+                        <button id="filter-skipped" class="filter-btn" data-filter="skipped">Skipped</button>
+                        <button id="filter-bookmarked" class="filter-btn" data-filter="bookmarked">Bookmarked</button>
+                    </div>
+                </div>
+                   <div class="controls-right">
+                        <button id="zoom-out-btn-review" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+                        <button id="zoom-in-btn-review" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+                        <button id="mute-btn-review"> <i class="fas fa-volume-up"></i> </button>
+                   </div>
+              </div>
+               <div id="review-status-tracker"></div>
+              <div id="review-container" class="review-container">
+                  <div id="review-question-number"></div>
+                  <div id="review-time-taken"></div>
+                  <h2 id="review-question-text"></h2>
+                  <div id="review-options" class="options"></div>
+                  <div id="review-explanation"></div>
+              </div>
+              <div class="button-group">
+                  <button id="prev-review-btn">Previous</button>
+                  <button id="next-review-btn">Next</button>
+                  <button id="back-to-summary-btn">Back to Summary</button>
+              </div>
+         </div>
+        </div>
+    
+       <!-- === AI EXPLANATION OVERLAY PANEL === -->
+        <div id="ai-explanation-overlay" class="ai-explanation-overlay" style="display: none;">
+            <div class="ai-explanation-modal">
+                <div class="ai-explanation-header">
+                    <h2>AI Powered Explanation</h2>
+                    <button id="ai-explanation-close-btn" title="Close (Esc)">×</button>
+                </div>
+                <div id="ai-explanation-body" class="ai-explanation-body">
+                    <!-- AI Explanation will be loaded here -->
+                </div>
+            </div>
+        </div>
+        <!-- === END OF PANEL === -->
+    </div> 
+      
+    <div id="timeout-overlay">Time's Up!</div>
+    <audio id="correct-sound" src="https://www.fesliyanstudios.com/play-mp3/5744" preload="auto"></audio>
+    <audio id="wrong-sound" src="https://www.fesliyanstudios.com/play-mp3/7002" preload="auto"></audio>
+
+    <!-- === SETTINGS MODAL === -->
+    <div id="settings-overlay" style="display: none;">
+        <div id="settings-panel">
+            <div class="settings-header">
+                <h2>Settings</h2>
+                <button id="settings-close-btn" title="Close">×</button>
+            </div>
+            <div class="settings-body">
+                <div class="setting-row">
+                    <label for="dark-mode-toggle"><i class="fas fa-moon"></i> Dark Mode</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="dark-mode-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <label for="sound-toggle"><i class="fas fa-volume-up"></i> Sound</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="sound-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <label for="shuffle-toggle"><i class="fas fa-random"></i> Shuffle Questions</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="shuffle-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <label for="animations-toggle"><i class="fas fa-magic"></i> Background Animations</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="animations-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <label for="haptic-toggle"><i class="fas fa-vibrator"></i> Haptic Feedback</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="haptic-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- === END OF SETTINGS MODAL === -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/dexie@4.0.7/dist/dexie.min.js"></script>
+    
+    <script type="module" src="index.js"></script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>

@@ -1,0 +1,1559 @@
+Content Contribution Guidelines for questions.json
+
+1. Introduction
+This document provides the official guidelines for adding new questions to the questions.json data file for the Quiz App. To ensure data consistency, application stability, and a high-quality user experience, it is mandatory to follow this structure precisely.
+
+The goal is to create a rich, well-organized, and easily filterable question bank. Adherence to these guidelines is critical for the filtering and data-parsing logic of the application to function correctly.
+
+2. General JSON Structure
+The questions.json file is an array of question objects. Each object represents a single question and must follow the structure below.
+
+High-Level Structure:
+
+{
+  "id": Number,
+  "sourceInfo": { ... },
+  "classification": { ... },
+  "tags": [ ... ],
+  "properties": { ... },
+  "question": "String",
+  "question_hi": "String",
+  "options": [ ... ],
+  "options_hi": [ ... ],
+  "correct": "String",
+  "explanation": { ... }
+}
+
+
+3. Detailed Field Explanations
+id (Required)
+Type: Number (Integer)
+
+Description: A unique identifier for the question. It must be sequential. Before adding a new question, check the id of the last question in the file and use the next integer.
+
+Example: 72
+
+sourceInfo (Required)
+An object containing metadata about the question's origin.
+
+examName:
+
+Type: String
+
+Description: The name of the exam. Must be one of the predefined values from the list below.
+
+Example: "CGL PRE"
+
+examYear:
+
+Type: Number
+
+Description: The year the exam was conducted.
+
+Example: 2024
+
+examDateShift:
+
+Type: String
+
+Description: Additional information like the date and shift.
+
+Example: "Shift 1" or "Various Shifts"
+
+classification (Required)
+An object for the hierarchical categorization of the question. All values must be chosen from the predefined lists provided in Section 4.
+
+subject:
+
+Type: String
+
+Example: "Polity"
+
+topic:
+
+Type: String
+
+Example: "Fundamental Rights & Duties"
+
+subTopic:
+
+Type: String
+
+Example: "Fundamental Rights (Art 12-35)"
+
+tags (Recommended)
+Type: Array of Strings
+
+Description: Specific keywords that help in fine-grained searching. These can be more specific than the sub-topic. Use PascalCase for multi-word tags.
+
+Example: ["Article 19", "FreedomOfSpeech", "Constitution"]
+
+properties (Required)
+An object containing question attributes.
+
+difficulty:
+
+Type: String
+
+Description: The difficulty level. Must be one of the predefined values.
+
+Example: "Medium"
+
+questionType:
+
+Type: String
+
+Description: The type of question. Must be one of the predefined values.
+
+Example: "MCQ"
+
+question & question_hi (Required)
+Type: String
+
+Description: The full text of the question in English (question) and Hindi (question_hi). Include the question number (e.g., Q.72)) at the beginning of the string.
+
+Example (question): "Q.72) Which article of the Indian Constitution guarantees the 'Right to Freedom of Speech and Expression'?"
+
+Example (question_hi): "प्रश्न 72) भारतीय संविधान का कौन सा अनुच्छेद 'भाषण और अभिव्यक्ति की स्वतंत्रता का अधिकार' की गारंटी देता है?"
+
+options & options_hi (Required)
+Type: Array of Strings
+
+Description: An array containing the multiple-choice options in English (options) and Hindi (options_hi). The order of options must match between the two arrays. There should typically be 4 options.
+
+Example (options): ["Article 14", "Article 21", "Article 19", "Article 32"]
+
+Example (options_hi): ["अनुच्छेद 14", "अनुच्छेद 21", "अनुच्छेद 19", "अनुच्छेद 32"]
+
+correct (Required)
+Type: String
+
+Description: The correct answer. This string must be an exact match to one of the values in the options (English) array.
+
+Example: "Article 19"
+
+explanation (Required)
+An object containing a structured explanation. The content for each field should be written in Markdown format for rich text rendering in the app.
+
+summary: A brief summary, usually stating the correct answer.
+
+analysis_correct: A detailed explanation of why the correct option is correct. Use a heading like ✅ Why this is correct.
+
+analysis_incorrect: An explanation of why the other options are incorrect. Use a heading like ❌ Why other options are incorrect.
+
+conclusion: A concluding thought or takeaway. Use a heading like 📝 Concluding Note.
+
+fact: A relevant and interesting fact. Use a heading like 💡 Interesting Fact.
+
+Example:
+
+"explanation": {
+  "summary": "Correct Answer: C) Article 19",
+  "analysis_correct": "✅ Why this is correct\n\n- Article 19(1)(a) of the Indian Constitution guarantees the fundamental right to freedom of speech and expression to all citizens.",
+  "analysis_incorrect": "❌ Why other options are incorrect\n\n- **Article 14:** Deals with the right to equality.\n- **Article 21:** Pertains to the protection of life and personal liberty.\n- **Article 32:** Grants the right to constitutional remedies.",
+  "conclusion": "📝 Concluding Note\n\n- Understanding the specific articles related to Fundamental Rights is crucial for the Polity section of competitive exams.",
+  "fact": "💡 Interesting Fact\n\n- The right to freedom of speech is not absolute and is subject to 'reasonable restrictions' on grounds like security of the state, public order, and morality."
+}
+
+
+4. Predefined Values for Filters
+To maintain consistency, you must use the exact string values from the lists below for the corresponding fields.
+
+difficulty
+Easy
+
+Medium
+
+Hard
+
+questionType
+MCQ
+
+examName
+CGL PRE, CGL MAINS, CHSL PRE, CHSL MAINS, SSC CPO PRE, SSC MTS, SSC GD Constable, SSC JE, SSC Selection Posts (Phase XIII, etc.), SSC STENO PRE, Delhi Police Constable, Delhi Police Head Constable, BPSC CSE PRE, NDA, CDS, RRB NTPC UG, RRB NTPC INTER LEVEL, RRB NTPC GRADUATE LEVEL, BIHAR SSC CGL, BIHAR SSC INTER_LEVEL, BPSC TRE1, BPSC TRE2, IB ACIO PRE, UPSC CSE PRE, UPSC IFCO
+
+Full Classification Hierarchy
+subject: History
+topic: Ancient History
+
+subTopic: Prehistoric Period
+
+subTopic: Indus Valley Civilization
+
+subTopic: Vedic Period
+
+subTopic: Mahajanapadas & Magadha Empire
+
+subTopic: Religious Movements (Buddhism & Jainism)
+
+subTopic: Foreign Invasions (Persian & Greek)
+
+subTopic: Mauryan Empire
+
+subTopic: Post-Mauryan Period
+
+subTopic: Gupta Empire
+
+subTopic: Post-Gupta Period
+
+subTopic: South Indian Dynasties
+
+topic: Medieval History
+
+subTopic: Early Medieval India
+
+subTopic: The Delhi Sultanate
+
+subTopic: The Vijayanagara & Bahmani Kingdoms
+
+subTopic: Art & Architecture (Sultanate & Mughal Period)
+
+subTopic: Bhakti & Sufi Movements
+
+subTopic: The Mughal Empire
+
+subTopic: The Maratha Empire
+
+topic: Modern History
+
+subTopic: Advent of Europeans
+
+subTopic: British Conquest of India
+
+subTopic: Important Battles & Treaties
+
+subTopic: Economic Impact of British Rule
+
+subTopic: Socio-Religious Reform Movements
+
+subTopic: The Revolt of 1857
+
+subTopic: Tribal & Peasant Uprisings
+
+subTopic: Press & Literature in British India
+
+subTopic: Indian National Movement (Phase 1: 1885-1905)
+
+subTopic: Indian National Movement (Phase 2: 1905-1919)
+
+subTopic: Indian National Movement (Gandhian Era 1919-1947)
+
+subTopic: Governor-Generals & Viceroys
+
+subTopic: Constitutional Development in British India
+
+topic: World History
+
+subTopic: Renaissance
+
+subTopic: Reformation
+
+subTopic: Industrial Revolution
+
+subTopic: American Revolution
+
+subTopic: French Revolution
+
+subTopic: World War I
+
+subTopic: Russian Revolution
+
+subTopic: World War II
+
+subject: Geography
+topic: Physical Geography
+
+subTopic: Universe & Solar System
+
+subTopic: Earth's Interior & Rocks
+
+subTopic: Geomorphic Processes
+
+subTopic: Atmosphere
+
+subTopic: Oceanography
+
+topic: World Geography
+
+subTopic: Continents
+
+subTopic: Major Landforms
+
+subTopic: Major Rivers & Lakes
+
+subTopic: World Population & Tribes
+
+subTopic: World Agriculture & Minerals
+
+topic: Indian Geography
+
+subTopic: Physical Features of India
+
+subTopic: River Systems of India
+
+subTopic: Climate of India
+
+subTopic: Soils of India
+
+subTopic: Natural Vegetation & Wildlife
+
+subTopic: Major Passes, Glaciers & Plateaus
+
+subTopic: Agriculture in India
+
+subTopic: Mineral & Energy Resources
+
+subTopic: Industries in India
+
+subTopic: Transport & Communication
+
+subTopic: Census & Demographics (2011)
+
+subTopic: Indian States & UTs (Capitals, Borders)
+
+subject: Economics
+topic: Macroeconomics
+
+subTopic: National Income (GDP, GNP, NNP)
+
+subTopic: Money & Banking (RBI, Monetary Policy)
+
+subTopic: Inflation
+
+subTopic: Public Finance (Budget, Fiscal Policy, Taxation)
+
+topic: Microeconomics
+
+subTopic: Basics of Demand & Supply
+
+subTopic: Market Structures
+
+topic: Indian Economy
+
+subTopic: Sectors of the Economy
+
+subTopic: Economic Planning (Five-Year Plans, NITI Aayog)
+
+subTopic: Indian Economic Reforms (LPG Reforms 1991)
+
+subTopic: Taxation in India (Direct/Indirect Taxes, GST)
+
+subTopic: Poverty, Inequality & Unemployment
+
+subTopic: Government Schemes & Policies
+
+subTopic: Agriculture & Food Security
+
+subTopic: Industrial Policy
+
+subTopic: Financial Markets (Money & Capital Market)
+
+subTopic: International Trade & Balance of Payments
+
+topic: Banking & Finance
+
+subTopic: RBI & its Functions
+
+subTopic: Types of Banks & Banking Sector Reforms
+
+subTopic: Financial Institutions (SEBI, IRDAI, NABARD)
+
+subTopic: International Financial Bodies (IMF, World Bank, WTO)
+
+subject: Polity
+topic: Constitutional Framework
+
+subTopic: Making of the Constitution
+
+subTopic: Salient Features
+
+subTopic: Preamble
+
+subTopic: Union & its Territory (Art 1-4)
+
+subTopic: Citizenship (Art 5-11)
+
+topic: Fundamental Rights & Duties
+
+subTopic: Fundamental Rights (Art 12-35)
+
+subTopic: Directive Principles of State Policy (DPSP - Art 36-51)
+
+subTopic: Fundamental Duties (Art 51A)
+
+topic: Union Government
+
+subTopic: The President & Vice-President
+
+subTopic: Prime Minister & Council of Ministers
+
+subTopic: Parliament (Lok Sabha, Rajya Sabha, Bills, Sessions, Parliamentary Committees)
+
+subTopic: The Judiciary (Supreme Court)
+
+topic: State Government
+
+subTopic: Governor
+
+subTopic: Chief Minister & State Council of Ministers
+
+subTopic: State Legislature
+
+subTopic: High Courts & Subordinate Courts
+
+topic: Local Government & Special Areas
+
+subTopic: Panchayati Raj (73rd Amendment)
+
+subTopic: Municipalities (74th Amendment)
+
+subTopic: Union Territories
+
+subTopic: Scheduled & Tribal Areas
+
+topic: Constitutional & Non-Constitutional Bodies
+
+subTopic: Election Commission
+
+subTopic: UPSC, SPSC
+
+subTopic: Finance Commission
+
+subTopic: CAG
+
+subTopic: NCSC, NCST, NCBC
+
+subTopic: NITI Aayog, NHRC, CVC, CBI
+
+topic: Constitutional Dynamics & Evolution
+
+subTopic: Amendment of the Constitution (Major Amendments like 42nd, 44th, 73rd, 101st etc.)
+
+subTopic: Schedules of the Constitution
+
+subTopic: Parts of the Constitution
+
+subTopic: Landmark Supreme Court Judgements
+
+subTopic: Important Acts (Pre & Post Independence - e.g., GoI Act 1935, RTI Act 2005)
+
+topic: Miscellaneous
+
+subTopic: Emergency Provisions
+
+subTopic: Official Language
+
+subject: Physics
+topic: Mechanics
+
+subTopic: Units & Measurements
+
+subTopic: Motion
+
+subTopic: Laws of Motion
+
+subTopic: Work, Energy & Power
+
+subTopic: Gravitation
+
+topic: Properties of Matter
+
+subTopic: Elasticity
+
+subTopic: Surface Tension
+
+subTopic: Viscosity
+
+subTopic: Fluid Dynamics
+
+topic: Heat & Thermodynamics
+
+subTopic: Heat & Temperature
+
+subTopic: Heat Transfer
+
+subTopic: Laws of Thermodynamics
+
+topic: Waves & Optics
+
+subTopic: Oscillations & Waves
+
+subTopic: Sound
+
+subTopic: Light (Reflection, Refraction, Interference, Diffraction)
+
+subTopic: Optical Instruments
+
+topic: Electromagnetism
+
+subTopic: Electrostatics
+
+subTopic: Current Electricity
+
+subTopic: Magnetism
+
+subTopic: Electromagnetic Induction & AC
+
+topic: Modern Physics
+
+subTopic: Dual Nature of Matter
+
+subTopic: Atoms & Nuclei
+
+subTopic: Semiconductor Electronics
+
+topic: Applied Physics
+
+subTopic: Scientific Instruments & their Uses
+
+subTopic: Inventions & Discoveries
+
+subject: Chemistry
+topic: Physical Chemistry
+
+subTopic: Matter & its States
+
+subTopic: Atomic Structure
+
+subTopic: Chemical Bonding
+
+subTopic: Thermodynamics
+
+subTopic: Solutions
+
+subTopic: Equilibrium
+
+subTopic: Redox Reactions
+
+topic: Inorganic Chemistry
+
+subTopic: Periodic Classification
+
+subTopic: Metals & Non-metals
+
+subTopic: Metallurgy
+
+subTopic: Important Compounds (Acids, Bases, Salts)
+
+topic: Organic Chemistry
+
+subTopic: Basics of Organic Chemistry
+
+subTopic: Hydrocarbons
+
+subTopic: Functional Groups
+
+topic: Applied Chemistry
+
+subTopic: Polymers
+
+subTopic: Biomolecules
+
+subTopic: Important Ores & Alloys
+
+subTopic: Cement, Glass & Fertilizers
+
+subTopic: Chemistry in Everyday Life (Soaps, Drugs)
+
+subject: Biology
+topic: Cell Biology & Genetics
+
+subTopic: The Cell and its Organelles
+
+subTopic: Cell Division
+
+subTopic: Genetics & Evolution
+
+topic: Human Physiology
+
+subTopic: Digestive System
+
+subTopic: Respiratory System
+
+subTopic: Circulatory System
+
+subTopic: Excretory System
+
+subTopic: Nervous System
+
+subTopic: Endocrine System (Hormones)
+
+subTopic: Skeletal & Muscular System
+
+topic: Health, Nutrition & Diseases
+
+subTopic: Human Diseases (Communicable & Non-communicable)
+
+subTopic: Vitamins & Minerals
+
+subTopic: Vaccines & Immunology
+
+topic: Plant Biology
+
+subTopic: Plant Kingdom Classification
+
+subTopic: Plant Morphology
+
+subTopic: Photosynthesis
+
+subTopic: Plant Hormones
+
+topic: Animal Biology
+
+subTopic: Animal Kingdom Classification
+
+topic: Biotechnology & Applications
+
+subject: Computer
+topic: Computer Fundamentals
+
+subTopic: History & Generations
+
+subTopic: Hardware (CPU, Memory, I/O)
+
+subTopic: Software (OS, Application Software)
+
+subTopic: Number System
+
+topic: Microsoft Office Suite
+
+subTopic: MS Word
+
+subTopic: MS Excel
+
+subTopic: MS PowerPoint
+
+topic: Networking & Internet
+
+subTopic: Computer Networks (LAN, MAN, WAN)
+
+subTopic: Internet & Services
+
+subTopic: Cybersecurity
+
+topic: Database Management
+
+subTopic: Basic Concepts of DBMS
+
+subject: Static GK
+topic: India at a Glance
+
+subTopic: First in India (Male/Female)
+
+subTopic: Superlatives
+
+subTopic: Important Days & Dates
+
+subTopic: Books & Authors (Indian)
+
+topic: Arts & Culture
+
+subTopic: Indian Dances (Classical & Folk)
+
+subTopic: Music
+
+subTopic: Festivals
+
+subTopic: UNESCO World Heritage Sites in India
+
+topic: World at a Glance
+
+subTopic: Countries (Capitals, Currencies, Parliaments)
+
+subTopic: International Organizations & Headquarters
+
+subTopic: World Superlatives
+
+topic: Awards, Honors & Sports
+
+subTopic: National Awards (Bharat Ratna, Padma Awards)
+
+subTopic: International Awards (Nobel Prize)
+
+subTopic: Sports Awards & Trophies
+
+subTopic: Sports Terminology
+
+topic: Defence & Security
+
+subTopic: Indian Armed Forces
+
+subTopic: Defence Exercises
+
+topic: National & International Insignia
+
+subTopic: National Symbols of India
+
+subTopic: Indian Government Organizations (ISRO, DRDO, BARC)
+
+subTopic: Neighbouring Countries (Capitals, Currencies, Sports)
+
+topic: Miscellaneous GK
+
+subTopic: Nicknames of Places & Personalities
+
+subTopic: Famous Slogans
+
+subTopic: First in India & World (Updated)
+
+subject: Ecology & Environment
+topic: Ecology & Ecosystem
+
+subTopic: Basic Concepts
+
+subTopic: Food Chain & Web
+
+subTopic: Ecological Pyramids
+
+topic: Biodiversity & Conservation
+
+subTopic: Biodiversity Hotspots
+
+subTopic: Conservation Methods (InContent Contribution Guidelines for questions.json
+
+1. Introduction
+This document provides the official guidelines for adding new questions to the questions.json data file for the Quiz App. To ensure data consistency, application stability, and a high-quality user experience, it is mandatory to follow this structure precisely.
+
+The goal is to create a rich, well-organized, and easily filterable question bank. Adherence to these guidelines is critical for the filtering and data-parsing logic of the application to function correctly.
+
+2. General JSON Structure
+The questions.json file is an array of question objects. Each object represents a single question and must follow the structure below.
+
+High-Level Structure:
+
+{
+  "id": Number,
+  "sourceInfo": { ... },
+  "classification": { ... },
+  "tags": [ ... ],
+  "properties": { ... },
+  "question": "String",
+  "question_hi": "String",
+  "options": [ ... ],
+  "options_hi": [ ... ],
+  "correct": "String",
+  "explanation": { ... }
+}
+
+
+3. Detailed Field Explanations
+id (Required)
+Type: Number (Integer)
+
+Description: A unique identifier for the question. It must be sequential. Before adding a new question, check the id of the last question in the file and use the next integer.
+
+Example: 72
+
+sourceInfo (Required)
+An object containing metadata about the question's origin.
+
+examName:
+
+Type: String
+
+Description: The name of the exam. Must be one of the predefined values from the list below.
+
+Example: "CGL PRE"
+
+examYear:
+
+Type: Number
+
+Description: The year the exam was conducted.
+
+Example: 2024
+
+examDateShift:
+
+Type: String
+
+Description: Additional information like the date and shift.
+
+Example: "Shift 1" or "Various Shifts"
+
+classification (Required)
+An object for the hierarchical categorization of the question. All values must be chosen from the predefined lists provided in Section 4.
+
+subject:
+
+Type: String
+
+Example: "Polity"
+
+topic:
+
+Type: String
+
+Example: "Fundamental Rights & Duties"
+
+subTopic:
+
+Type: String
+
+Example: "Fundamental Rights (Art 12-35)"
+
+tags (Recommended)
+Type: Array of Strings
+
+Description: Specific keywords that help in fine-grained searching. These can be more specific than the sub-topic. Use PascalCase for multi-word tags.
+
+Example: ["Article 19", "FreedomOfSpeech", "Constitution"]
+
+properties (Required)
+An object containing question attributes.
+
+difficulty:
+
+Type: String
+
+Description: The difficulty level. Must be one of the predefined values.
+
+Example: "Medium"
+
+questionType:
+
+Type: String
+
+Description: The type of question. Must be one of the predefined values.
+
+Example: "MCQ"
+
+question & question_hi (Required)
+Type: String
+
+Description: The full text of the question in English (question) and Hindi (question_hi). Include the question number (e.g., Q.72)) at the beginning of the string.
+
+Example (question): "Q.72) Which article of the Indian Constitution guarantees the 'Right to Freedom of Speech and Expression'?"
+
+Example (question_hi): "प्रश्न 72) भारतीय संविधान का कौन सा अनुच्छेद 'भाषण और अभिव्यक्ति की स्वतंत्रता का अधिकार' की गारंटी देता है?"
+
+options & options_hi (Required)
+Type: Array of Strings
+
+Description: An array containing the multiple-choice options in English (options) and Hindi (options_hi). The order of options must match between the two arrays. There should typically be 4 options.
+
+Example (options): ["Article 14", "Article 21", "Article 19", "Article 32"]
+
+Example (options_hi): ["अनुच्छेद 14", "अनुच्छेद 21", "अनुच्छेद 19", "अनुच्छेद 32"]
+
+correct (Required)
+Type: String
+
+Description: The correct answer. This string must be an exact match to one of the values in the options (English) array.
+
+Example: "Article 19"
+
+explanation (Required)
+An object containing a structured explanation. The content for each field should be written in Markdown format for rich text rendering in the app.
+
+summary: A brief summary, usually stating the correct answer.
+
+analysis_correct: A detailed explanation of why the correct option is correct. Use a heading like ✅ Why this is correct.
+
+analysis_incorrect: An explanation of why the other options are incorrect. Use a heading like ❌ Why other options are incorrect.
+
+conclusion: A concluding thought or takeaway. Use a heading like 📝 Concluding Note.
+
+fact: A relevant and interesting fact. Use a heading like 💡 Interesting Fact.
+
+Example:
+
+"explanation": {
+  "summary": "Correct Answer: C) Article 19",
+  "analysis_correct": "✅ Why this is correct\n\n- Article 19(1)(a) of the Indian Constitution guarantees the fundamental right to freedom of speech and expression to all citizens.",
+  "analysis_incorrect": "❌ Why other options are incorrect\n\n- **Article 14:** Deals with the right to equality.\n- **Article 21:** Pertains to the protection of life and personal liberty.\n- **Article 32:** Grants the right to constitutional remedies.",
+  "conclusion": "📝 Concluding Note\n\n- Understanding the specific articles related to Fundamental Rights is crucial for the Polity section of competitive exams.",
+  "fact": "💡 Interesting Fact\n\n- The right to freedom of speech is not absolute and is subject to 'reasonable restrictions' on grounds like security of the state, public order, and morality."
+}
+
+
+4. Predefined Values for Filters
+To maintain consistency, you must use the exact string values from the lists below for the corresponding fields.
+
+difficulty
+Easy
+
+Medium
+
+Hard
+
+questionType
+MCQ
+
+examName
+CGL PRE, CGL MAINS, CHSL PRE, CHSL MAINS, SSC CPO PRE, SSC MTS, SSC GD Constable, SSC JE, SSC Selection Posts (Phase XIII, etc.), SSC STENO PRE, Delhi Police Constable, Delhi Police Head Constable, BPSC CSE PRE, NDA, CDS, RRB NTPC UG, RRB NTPC INTER LEVEL, RRB NTPC GRADUATE LEVEL, BIHAR SSC CGL, BIHAR SSC INTER_LEVEL, BPSC TRE1, BPSC TRE2, IB ACIO PRE, UPSC CSE PRE, UPSC IFCO
+
+Full Classification Hierarchy
+subject: History
+topic: Ancient History
+
+subTopic: Prehistoric Period
+
+subTopic: Indus Valley Civilization
+
+subTopic: Vedic Period
+
+subTopic: Mahajanapadas & Magadha Empire
+
+subTopic: Religious Movements (Buddhism & Jainism)
+
+subTopic: Foreign Invasions (Persian & Greek)
+
+subTopic: Mauryan Empire
+
+subTopic: Post-Mauryan Period
+
+subTopic: Gupta Empire
+
+subTopic: Post-Gupta Period
+
+subTopic: South Indian Dynasties
+
+topic: Medieval History
+
+subTopic: Early Medieval India
+
+subTopic: The Delhi Sultanate
+
+subTopic: The Vijayanagara & Bahmani Kingdoms
+
+subTopic: Art & Architecture (Sultanate & Mughal Period)
+
+subTopic: Bhakti & Sufi Movements
+
+subTopic: The Mughal Empire
+
+subTopic: The Maratha Empire
+
+topic: Modern History
+
+subTopic: Advent of Europeans
+
+subTopic: British Conquest of India
+
+subTopic: Important Battles & Treaties
+
+subTopic: Economic Impact of British Rule
+
+subTopic: Socio-Religious Reform Movements
+
+subTopic: The Revolt of 1857
+
+subTopic: Tribal & Peasant Uprisings
+
+subTopic: Press & Literature in British India
+
+subTopic: Indian National Movement (Phase 1: 1885-1905)
+
+subTopic: Indian National Movement (Phase 2: 1905-1919)
+
+subTopic: Indian National Movement (Gandhian Era 1919-1947)
+
+subTopic: Governor-Generals & Viceroys
+
+subTopic: Constitutional Development in British India
+
+topic: World History
+
+subTopic: Renaissance
+
+subTopic: Reformation
+
+subTopic: Industrial Revolution
+
+subTopic: American Revolution
+
+subTopic: French Revolution
+
+subTopic: World War I
+
+subTopic: Russian Revolution
+
+subTopic: World War II
+
+subject: Geography
+topic: Physical Geography
+
+subTopic: Universe & Solar System
+
+subTopic: Earth's Interior & Rocks
+
+subTopic: Geomorphic Processes
+
+subTopic: Atmosphere
+
+subTopic: Oceanography
+
+topic: World Geography
+
+subTopic: Continents
+
+subTopic: Major Landforms
+
+subTopic: Major Rivers & Lakes
+
+subTopic: World Population & Tribes
+
+subTopic: World Agriculture & Minerals
+
+topic: Indian Geography
+
+subTopic: Physical Features of India
+
+subTopic: River Systems of India
+
+subTopic: Climate of India
+
+subTopic: Soils of India
+
+subTopic: Natural Vegetation & Wildlife
+
+subTopic: Major Passes, Glaciers & Plateaus
+
+subTopic: Agriculture in India
+
+subTopic: Mineral & Energy Resources
+
+subTopic: Industries in India
+
+subTopic: Transport & Communication
+
+subTopic: Census & Demographics (2011)
+
+subTopic: Indian States & UTs (Capitals, Borders)
+
+subject: Economics
+topic: Macroeconomics
+
+subTopic: National Income (GDP, GNP, NNP)
+
+subTopic: Money & Banking (RBI, Monetary Policy)
+
+subTopic: Inflation
+
+subTopic: Public Finance (Budget, Fiscal Policy, Taxation)
+
+topic: Microeconomics
+
+subTopic: Basics of Demand & Supply
+
+subTopic: Market Structures
+
+topic: Indian Economy
+
+subTopic: Sectors of the Economy
+
+subTopic: Economic Planning (Five-Year Plans, NITI Aayog)
+
+subTopic: Indian Economic Reforms (LPG Reforms 1991)
+
+subTopic: Taxation in India (Direct/Indirect Taxes, GST)
+
+subTopic: Poverty, Inequality & Unemployment
+
+subTopic: Government Schemes & Policies
+
+subTopic: Agriculture & Food Security
+
+subTopic: Industrial Policy
+
+subTopic: Financial Markets (Money & Capital Market)
+
+subTopic: International Trade & Balance of Payments
+
+topic: Banking & Finance
+
+subTopic: RBI & its Functions
+
+subTopic: Types of Banks & Banking Sector Reforms
+
+subTopic: Financial Institutions (SEBI, IRDAI, NABARD)
+
+subTopic: International Financial Bodies (IMF, World Bank, WTO)
+
+subject: Polity
+topic: Constitutional Framework
+
+subTopic: Making of the Constitution
+
+subTopic: Salient Features
+
+subTopic: Preamble
+
+subTopic: Union & its Territory (Art 1-4)
+
+subTopic: Citizenship (Art 5-11)
+
+topic: Fundamental Rights & Duties
+
+subTopic: Fundamental Rights (Art 12-35)
+
+subTopic: Directive Principles of State Policy (DPSP - Art 36-51)
+
+subTopic: Fundamental Duties (Art 51A)
+
+topic: Union Government
+
+subTopic: The President & Vice-President
+
+subTopic: Prime Minister & Council of Ministers
+
+subTopic: Parliament (Lok Sabha, Rajya Sabha, Bills, Sessions, Parliamentary Committees)
+
+subTopic: The Judiciary (Supreme Court)
+
+topic: State Government
+
+subTopic: Governor
+
+subTopic: Chief Minister & State Council of Ministers
+
+subTopic: State Legislature
+
+subTopic: High Courts & Subordinate Courts
+
+topic: Local Government & Special Areas
+
+subTopic: Panchayati Raj (73rd Amendment)
+
+subTopic: Municipalities (74th Amendment)
+
+subTopic: Union Territories
+
+subTopic: Scheduled & Tribal Areas
+
+topic: Constitutional & Non-Constitutional Bodies
+
+subTopic: Election Commission
+
+subTopic: UPSC, SPSC
+
+subTopic: Finance Commission
+
+subTopic: CAG
+
+subTopic: NCSC, NCST, NCBC
+
+subTopic: NITI Aayog, NHRC, CVC, CBI
+
+topic: Constitutional Dynamics & Evolution
+
+subTopic: Amendment of the Constitution (Major Amendments like 42nd, 44th, 73rd, 101st etc.)
+
+subTopic: Schedules of the Constitution
+
+subTopic: Parts of the Constitution
+
+subTopic: Landmark Supreme Court Judgements
+
+subTopic: Important Acts (Pre & Post Independence - e.g., GoI Act 1935, RTI Act 2005)
+
+topic: Miscellaneous
+
+subTopic: Emergency Provisions
+
+subTopic: Official Language
+
+subject: Physics
+topic: Mechanics
+
+subTopic: Units & Measurements
+
+subTopic: Motion
+
+subTopic: Laws of Motion
+
+subTopic: Work, Energy & Power
+
+subTopic: Gravitation
+
+topic: Properties of Matter
+
+subTopic: Elasticity
+
+subTopic: Surface Tension
+
+subTopic: Viscosity
+
+subTopic: Fluid Dynamics
+
+topic: Heat & Thermodynamics
+
+subTopic: Heat & Temperature
+
+subTopic: Heat Transfer
+
+subTopic: Laws of Thermodynamics
+
+topic: Waves & Optics
+
+subTopic: Oscillations & Waves
+
+subTopic: Sound
+
+subTopic: Light (Reflection, Refraction, Interference, Diffraction)
+
+subTopic: Optical Instruments
+
+topic: Electromagnetism
+
+subTopic: Electrostatics
+
+subTopic: Current Electricity
+
+subTopic: Magnetism
+
+subTopic: Electromagnetic Induction & AC
+
+topic: Modern Physics
+
+subTopic: Dual Nature of Matter
+
+subTopic: Atoms & Nuclei
+
+subTopic: Semiconductor Electronics
+
+topic: Applied Physics
+
+subTopic: Scientific Instruments & their Uses
+
+subTopic: Inventions & Discoveries
+
+subject: Chemistry
+topic: Physical Chemistry
+
+subTopic: Matter & its States
+
+subTopic: Atomic Structure
+
+subTopic: Chemical Bonding
+
+subTopic: Thermodynamics
+
+subTopic: Solutions
+
+subTopic: Equilibrium
+
+subTopic: Redox Reactions
+
+topic: Inorganic Chemistry
+
+subTopic: Periodic Classification
+
+subTopic: Metals & Non-metals
+
+subTopic: Metallurgy
+
+subTopic: Important Compounds (Acids, Bases, Salts)
+
+topic: Organic Chemistry
+
+subTopic: Basics of Organic Chemistry
+
+subTopic: Hydrocarbons
+
+subTopic: Functional Groups
+
+topic: Applied Chemistry
+
+subTopic: Polymers
+
+subTopic: Biomolecules
+
+subTopic: Important Ores & Alloys
+
+subTopic: Cement, Glass & Fertilizers
+
+subTopic: Chemistry in Everyday Life (Soaps, Drugs)
+
+subject: Biology
+topic: Cell Biology & Genetics
+
+subTopic: The Cell and its Organelles
+
+subTopic: Cell Division
+
+subTopic: Genetics & Evolution
+
+topic: Human Physiology
+
+subTopic: Digestive System
+
+subTopic: Respiratory System
+
+subTopic: Circulatory System
+
+subTopic: Excretory System
+
+subTopic: Nervous System
+
+subTopic: Endocrine System (Hormones)
+
+subTopic: Skeletal & Muscular System
+
+topic: Health, Nutrition & Diseases
+
+subTopic: Human Diseases (Communicable & Non-communicable)
+
+subTopic: Vitamins & Minerals
+
+subTopic: Vaccines & Immunology
+
+topic: Plant Biology
+
+subTopic: Plant Kingdom Classification
+
+subTopic: Plant Morphology
+
+subTopic: Photosynthesis
+
+subTopic: Plant Hormones
+
+topic: Animal Biology
+
+subTopic: Animal Kingdom Classification
+
+topic: Biotechnology & Applications
+
+subject: Computer
+topic: Computer Fundamentals
+
+subTopic: History & Generations
+
+subTopic: Hardware (CPU, Memory, I/O)
+
+subTopic: Software (OS, Application Software)
+
+subTopic: Number System
+
+topic: Microsoft Office Suite
+
+subTopic: MS Word
+
+subTopic: MS Excel
+
+subTopic: MS PowerPoint
+
+topic: Networking & Internet
+
+subTopic: Computer Networks (LAN, MAN, WAN)
+
+subTopic: Internet & Services
+
+subTopic: Cybersecurity
+
+topic: Database Management
+
+subTopic: Basic Concepts of DBMS
+
+subject: Static GK
+topic: India at a Glance
+
+subTopic: First in India (Male/Female)
+
+subTopic: Superlatives
+
+subTopic: Important Days & Dates
+
+subTopic: Books & Authors (Indian)
+
+topic: Arts & Culture
+
+subTopic: Indian Dances (Classical & Folk)
+
+subTopic: Music
+
+subTopic: Festivals
+
+subTopic: UNESCO World Heritage Sites in India
+
+topic: World at a Glance
+
+subTopic: Countries (Capitals, Currencies, Parliaments)
+
+subTopic: International Organizations & Headquarters
+
+subTopic: World Superlatives
+
+topic: Awards, Honors & Sports
+
+subTopic: National Awards (Bharat Ratna, Padma Awards)
+
+subTopic: International Awards (Nobel Prize)
+
+subTopic: Sports Awards & Trophies
+
+subTopic: Sports Terminology
+
+topic: Defence & Security
+
+subTopic: Indian Armed Forces
+
+subTopic: Defence Exercises
+
+topic: National & International Insignia
+
+subTopic: National Symbols of India
+
+subTopic: Indian Government Organizations (ISRO, DRDO, BARC)
+
+subTopic: Neighbouring Countries (Capitals, Currencies, Sports)
+
+topic: Miscellaneous GK
+
+subTopic: Nicknames of Places & Personalities
+
+subTopic: Famous Slogans
+
+subTopic: First in India & World (Updated)
+
+subject: Ecology & Environment
+topic: Ecology & Ecosystem
+
+subTopic: Basic Concepts
+
+subTopic: Food Chain & Web
+
+subTopic: Ecological Pyramids
+
+topic: Biodiversity & Conservation
+
+subTopic: Biodiversity Hotspots
+
+subTopic: Conservation Methods (In-situ, Ex-situ)
+
+subTopic: National Parks
+
+subTopic: Wildlife Sanctuaries
+
+subTopic: Biosphere Reserves
+
+topic: Environmental Issues & Conventions
+
+subTopic: Pollution (Air, Water, Soil)
+
+subTopic: Climate Change & Global Warming
+
+subTopic: Ozone Depletion
+
+subTopic: International Conventions (Ramsar, Kyoto, Paris Agreement)
+
+5. Complete Example of a New Question
+Here is a full example that you can use as a template.
+
+{
+  "id": 72,
+  "sourceInfo": {
+    "examName": "CGL PRE",
+    "examYear": 2024,
+    "examDateShift": "Shift 1"
+  },
+  "classification": {
+    "subject": "Polity",
+    "topic": "Fundamental Rights & Duties",
+    "subTopic": "Fundamental Rights (Art 12-35)"
+  },
+  "tags": ["Article 19", "FreedomOfSpeech", "Constitution"],
+  "properties": {
+    "difficulty": "Medium",
+    "questionType": "MCQ"
+  },
+  "question": "Q.72) Which article of the Indian Constitution guarantees the 'Right to Freedom of Speech and Expression'?",
+  "question_hi": "प्रश्न 72) भारतीय संविधान का कौन सा अनुच्छेद 'भाषण और अभिव्यक्ति की स्वतंत्रता का अधिकार' की गारंटी देता है?",
+  "options": ["Article 14", "Article 21", "Article 19", "Article 32"],
+  "options_hi": ["अनुच्छेद 14", "अनुच्छेद 21", "अनुच्छेद 19", "अनुच्छेद 32"],
+  "correct": "Article 19",
+  "explanation": {
+    "summary": "Correct Answer: C) Article 19",
+    "analysis_correct": "✅ Why this is correct\n\n- Article 19(1)(a) of the Indian Constitution specifically guarantees the fundamental right to freedom of speech and expression to all citizens of India.",
+    "analysis_incorrect": "❌ Why other options are incorrect\n\n- **Article 14:** Deals with the Right to Equality before the law.\n- **Article 21:** Pertains to the Protection of Life and Personal Liberty.\n- **Article 32:** Grants the Right to Constitutional Remedies, allowing citizens to approach the Supreme Court for the enforcement of their fundamental rights.",
+    "conclusion": "📝 Concluding Note\n\n- Understanding the specific articles related to the six fundamental rights is a core and frequently tested area in the Polity section of competitive exams.",
+    "fact": "💡 Interesting Fact\n\n- The right to freedom of speech is not absolute and is subject to 'reasonable restrictions' imposed by the state on grounds like security of the state, public order, decency or morality."
+  }
+}
+
+
+6. Contribution Checklist
+Before finalizing your addition, please verify the following:
+
+ Valid JSON: Your file is valid JSON. Use an online validator if unsure.
+
+ Unique ID: The id is a unique integer, one greater than the previous question.
+
+ Predefined Values: All values for subject, topic, subTopic, difficulty, questionType, and examName are taken exactly from the approved lists.
+
+ Correct Answer Match: The correct string is an exact, case-sensitive match to one of the strings in the options array.
+
+ Bilingual Content: Both English (question, options) and Hindi (question_hi, options_hi) fields are present and correctly translated.
+
+ Markdown in Explanation: The explanation fields use Markdown for formatting (e.g., **bold**, - list item).
+
+ Question Numbering: The question text strings start with Q.xx).-situ, Ex-situ)
+
+subTopic: National Parks
+
+subTopic: Wildlife Sanctuaries
+
+subTopic: Biosphere Reserves
+
+topic: Environmental Issues & Conventions
+
+subTopic: Pollution (Air, Water, Soil)
+
+subTopic: Climate Change & Global Warming
+
+subTopic: Ozone Depletion
+
+subTopic: International Conventions (Ramsar, Kyoto, Paris Agreement)
+
+5. Complete Example of a New Question
+Here is a full example that you can use as a template.
+
+{
+  "id": 72,
+  "sourceInfo": {
+    "examName": "CGL PRE",
+    "examYear": 2024,
+    "examDateShift": "Shift 1"
+  },
+  "classification": {
+    "subject": "Polity",
+    "topic": "Fundamental Rights & Duties",
+    "subTopic": "Fundamental Rights (Art 12-35)"
+  },
+  "tags": ["Article 19", "FreedomOfSpeech", "Constitution"],
+  "properties": {
+    "difficulty": "Medium",
+    "questionType": "MCQ"
+  },
+  "question": "Q.72) Which article of the Indian Constitution guarantees the 'Right to Freedom of Speech and Expression'?",
+  "question_hi": "प्रश्न 72) भारतीय संविधान का कौन सा अनुच्छेद 'भाषण और अभिव्यक्ति की स्वतंत्रता का अधिकार' की गारंटी देता है?",
+  "options": ["Article 14", "Article 21", "Article 19", "Article 32"],
+  "options_hi": ["अनुच्छेद 14", "अनुच्छेद 21", "अनुच्छेद 19", "अनुच्छेद 32"],
+  "correct": "Article 19",
+  "explanation": {
+    "summary": "Correct Answer: C) Article 19",
+    "analysis_correct": "✅ Why this is correct\n\n- Article 19(1)(a) of the Indian Constitution specifically guarantees the fundamental right to freedom of speech and expression to all citizens of India.",
+    "analysis_incorrect": "❌ Why other options are incorrect\n\n- **Article 14:** Deals with the Right to Equality before the law.\n- **Article 21:** Pertains to the Protection of Life and Personal Liberty.\n- **Article 32:** Grants the Right to Constitutional Remedies, allowing citizens to approach the Supreme Court for the enforcement of their fundamental rights.",
+    "conclusion": "📝 Concluding Note\n\n- Understanding the specific articles related to the six fundamental rights is a core and frequently tested area in the Polity section of competitive exams.",
+    "fact": "💡 Interesting Fact\n\n- The right to freedom of speech is not absolute and is subject to 'reasonable restrictions' imposed by the state on grounds like security of the state, public order, decency or morality."
+  }
+}
+
+
+6. Contribution Checklist
+Before finalizing your addition, please verify the following:
+
+ Valid JSON: Your file is valid JSON. Use an online validator if unsure.
+
+ Unique ID: The id is a unique integer, one greater than the previous question.
+
+ Predefined Values: All values for subject, topic, subTopic, difficulty, questionType, and examName are taken exactly from the approved lists.
+
+ Correct Answer Match: The correct string is an exact, case-sensitive match to one of the strings in the options array.
+
+ Bilingual Content: Both English (question, options) and Hindi (question_hi, options_hi) fields are present and correctly translated.
+
+ Markdown in Explanation: The explanation fields use Markdown for formatting (e.g., **bold**, - list item).
+
+ Question Numbering: The question text strings start with Q.xx).
