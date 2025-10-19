@@ -14,6 +14,7 @@ export const config = {
 };
 
 export let state = {
+    allQuestionsMasterList: [],
     filteredQuestionsMasterList: [],
     questionGroups: [],
     currentGroupIndex: 0,

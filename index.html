@@ -16,18 +16,18 @@
   "imports": {
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.23.0",
     "vite": "https://aistudiocdn.com/vite@^7.1.10",
-    "path": "https://aistudiocdn.com/path@^0.12.7",
-    "url": "https://aistudiocdn.com/url@^0.11.4"
+    "path": "https://aistudiocdn.com/path@^0.12.7"
   }
 }
 </script>
+<link rel="stylesheet" href="/index.css">
 </head>
 
 <body data-theme="light">
     <!-- START: Loading Overlay -->
     <div id="loading-overlay">
         <div class="loader-content">
-            <lottie-player src="https://lottie.host/24993685-c54d-4c3d-8e99-1c25036e4776/w53eVCs2Wp.json" background="transparent" speed="1" style="width: 200px; height: 200px;" loop autoplay></lottie-player>
+            <lottie-player src="https://assets3.lottiefiles.com/packages/lf20_fitybppd.json" background="transparent" speed="1" style="width: 200px; height: 200px;" loop autoplay></lottie-player>
             <p id="loading-text">Wait calmly, your questions are getting loaded.</p>
             <div class="loading-progress-container">
                 <div id="loading-progress-bar"></div>
@@ -412,8 +412,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://unpkg.com/dexie@4.0.7/dist/dexie.min.js"></script>
     
     <script type="module" src="index.js"></script>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>

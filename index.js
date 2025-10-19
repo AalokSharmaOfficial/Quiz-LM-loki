@@ -42,9 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateDynamicHeaders: this.updateDynamicHeaders.bind(this),
             };
 
-            // The init is now async and awaits the data source from the filter module
-            await initFilterModule(callbacks);
-
+            initFilterModule(callbacks);
             initQuizModule(callbacks);
             initReviewModule(callbacks);
 

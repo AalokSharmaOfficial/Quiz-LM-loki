@@ -1,20 +1,13 @@
 import { config, state } from './state.js';
 import { dom } from './dom.js';
 import { shuffleArray } from './utils.js';
-import { db, initDatabase } from './database.js';
 
 let appCallbacks = {};
 
-export async function initFilterModule(callbacks) {
+export function initFilterModule(callbacks) {
     appCallbacks = callbacks;
     bindFilterEventListeners();
-    try {
-        await initializeFilterDataSource();
-    } catch (error) {
-        console.error("Stopping app initialization due to database error.");
-        // The error is already displayed to the user by initDatabase, so we just stop here.
-        return;
-    }
+    loadQuestionsForFiltering();
     state.callbacks.confirmGoBackToFilters = callbacks.confirmGoBackToFilters;
 }
 
@@ -55,32 +48,90 @@ function bindFilterEventListeners() {
     }
 }
 
-async function initializeFilterDataSource() {
-    await initDatabase(); // This handles fetch, progress bar, and populating DB
-    
-    if (dom.loadingOverlay) {
-        dom.loadingOverlay.classList.add('fade-out');
-        dom.loadingOverlay.addEventListener('transitionend', () => {
-            dom.loadingOverlay.style.display = 'none';
-        }, { once: true });
+async function loadQuestionsForFiltering() {
+    try {
+        const response = await fetch('./questions.json');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const contentLength = response.headers.get('Content-Length');
+        const total = parseInt(contentLength, 10);
+        let loaded = 0;
+
+        // Fallback for servers that don't provide Content-Length or browsers that don't support streams
+        if (!total || !response.body) {
+            console.warn("Progress bar not supported by this server/browser. Loading questions...");
+            if (dom.loadingPercentage) dom.loadingPercentage.textContent = 'Loading...';
+            state.allQuestionsMasterList = await response.json();
+        } else {
+            const reader = response.body.getReader();
+            const chunks = [];
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                chunks.push(value);
+                loaded += value.length;
+                const progress = Math.round((loaded / total) * 100);
+                
+                // Update UI
+                if (dom.loadingProgressBar) dom.loadingProgressBar.style.width = `${progress}%`;
+                if (dom.loadingPercentage) dom.loadingPercentage.textContent = `${progress}%`;
+            }
+
+            // Combine chunks into a single Uint8Array
+            const allChunks = new Uint8Array(loaded);
+            let position = 0;
+            for (const chunk of chunks) {
+                allChunks.set(chunk, position);
+                position += chunk.length;
+            }
+
+            // Decode and parse JSON
+            const resultText = new TextDecoder("utf-8").decode(allChunks);
+            state.allQuestionsMasterList = JSON.parse(resultText);
+        }
+        
+        if (!state.allQuestionsMasterList || state.allQuestionsMasterList.length === 0) {
+            throw new Error(`No questions were found or the file is empty.`);
+        }
+
+        // Smoothly hide the loader
+        if (dom.loadingOverlay) {
+            dom.loadingOverlay.classList.add('fade-out');
+            dom.loadingOverlay.addEventListener('transitionend', () => {
+                dom.loadingOverlay.style.display = 'none';
+            }, { once: true });
+        }
+        
+        populateFilterControls();
+        onFilterStateChange();
+    } catch (error) {
+        console.error(`Could not load quiz questions:`, error);
+        if (dom.loadingOverlay) {
+            dom.loadingOverlay.innerHTML = `<div class="loader-content"><h1>Error Loading Quiz</h1><p>Could not fetch the questions. Please check your connection and refresh the page.</p><p style="font-size:0.8em; color: var(--text-color-light)">${error.message}</p></div>`;
+        }
     }
-    
-    await populateFilterControls();
-    await onFilterStateChange();
 }
 
-
-async function populateFilterControls() {
+function populateFilterControls() {
+    const questions = state.allQuestionsMasterList;
     const unique = {
-        subject: await db.questions.orderBy('classification.subject').uniqueKeys(),
-        difficulty: await db.questions.orderBy('properties.difficulty').uniqueKeys(),
-        questionType: await db.questions.orderBy('properties.questionType').uniqueKeys(),
-        examName: await db.questions.orderBy('sourceInfo.examName').uniqueKeys(),
-        examYear: (await db.questions.orderBy('sourceInfo.examYear').uniqueKeys()).reverse(),
-        tags: await db.questions.orderBy('tags').uniqueKeys()
+        subject: new Set(),
+        difficulty: new Set(), questionType: new Set(),
+        examName: new Set(), examYear: new Set(), tags: new Set()
     };
 
-    populateMultiSelect('subject', unique.subject);
+    questions.forEach(q => {
+        if (q.classification?.subject) unique.subject.add(q.classification.subject);
+        if (q.properties?.difficulty) unique.difficulty.add(q.properties.difficulty);
+        if (q.properties?.questionType) unique.questionType.add(q.properties.questionType);
+        if (q.sourceInfo?.examName) unique.examName.add(q.sourceInfo.examName);
+        if (q.sourceInfo?.examYear) unique.examYear.add(q.sourceInfo.examYear);
+        if (q.tags && Array.isArray(q.tags)) q.tags.forEach(tag => unique.tags.add(tag));
+    });
+
+    populateMultiSelect('subject', [...unique.subject].sort());
 
     const topicBtn = dom.filterElements.topic.toggleBtn;
     topicBtn.disabled = true;
@@ -89,11 +140,11 @@ async function populateFilterControls() {
     subTopicBtn.disabled = true;
     subTopicBtn.textContent = "Select a Topic first";
 
-    populateSegmentedControl('difficulty', unique.difficulty);
-    populateSegmentedControl('questionType', unique.questionType);
-    populateMultiSelect('examName', unique.examName);
-    populateMultiSelect('examYear', unique.examYear);
-    populateMultiSelect('tags', unique.tags);
+    populateSegmentedControl('difficulty', [...unique.difficulty].sort());
+    populateSegmentedControl('questionType', [...unique.questionType].sort());
+    populateMultiSelect('examName', [...unique.examName].sort());
+    populateMultiSelect('examYear', [...unique.examYear].sort((a,b) => b-a));
+    populateMultiSelect('tags', [...unique.tags].sort());
 }
 
 function populateMultiSelect(filterKey, options) {
@@ -147,7 +198,7 @@ function populateSegmentedControl(filterKey, options) {
     });
 }
 
-async function handleSelectionChange(filterKey, value) {
+function handleSelectionChange(filterKey, value) {
     const selectedValues = state.selectedFilters[filterKey];
     const index = selectedValues.indexOf(value);
     if (index > -1) {
@@ -163,17 +214,17 @@ async function handleSelectionChange(filterKey, value) {
         state.selectedFilters.subTopic = [];
     }
 
-    await onFilterStateChange();
+    onFilterStateChange();
 }
 
-async function onFilterStateChange() {
-    await updateDependentFilters();
-    await applyFilters();
-    await updateAllFilterCountsAndAvailability();
+function onFilterStateChange() {
+    updateDependentFilters();
+    applyFilters();
+    updateAllFilterCountsAndAvailability();
     updateActiveFiltersSummaryBar();
 }
 
-async function updateDependentFilters() {
+function updateDependentFilters() {
     const { subject: selectedSubjects, topic: selectedTopics } = state.selectedFilters;
     const { topic: topicElements, subTopic: subTopicElements } = dom.filterElements;
 
@@ -183,8 +234,15 @@ async function updateDependentFilters() {
         topicElements.list.innerHTML = '';
     } else {
         topicElements.toggleBtn.disabled = false;
-        const relevantTopics = await db.questions.where('classification.subject').anyOf(selectedSubjects).uniqueKeys('classification.topic');
-        populateMultiSelect('topic', Array.from(relevantTopics).sort());
+        const relevantTopics = new Set();
+        state.allQuestionsMasterList.forEach(q => {
+            if (q.classification?.subject && selectedSubjects.includes(q.classification.subject)) {
+                if (q.classification?.topic) {
+                    relevantTopics.add(q.classification.topic);
+                }
+            }
+        });
+        populateMultiSelect('topic', [...relevantTopics].sort());
     }
 
     if (selectedTopics.length === 0) {
@@ -193,85 +251,66 @@ async function updateDependentFilters() {
         subTopicElements.list.innerHTML = '';
     } else {
         subTopicElements.toggleBtn.disabled = false;
-        const relevantSubTopics = await db.questions.where('classification.subject').anyOf(selectedSubjects).and(q => selectedTopics.includes(q.classification.topic)).uniqueKeys('classification.subTopic');
-        populateMultiSelect('subTopic', Array.from(relevantSubTopics).sort());
+        const relevantSubTopics = new Set();
+        state.allQuestionsMasterList.forEach(q => {
+            if (q.classification?.subject && selectedSubjects.includes(q.classification.subject) &&
+                q.classification?.topic && selectedTopics.includes(q.classification.topic)) {
+                if (q.classification?.subTopic) {
+                    relevantSubTopics.add(q.classification.subTopic);
+                }
+            }
+        });
+        populateMultiSelect('subTopic', [...relevantSubTopics].sort());
     }
 }
 
-async function applyFilters(filters = state.selectedFilters) {
-    let query = db.questions.toCollection();
+function applyFilters(questionList = state.allQuestionsMasterList, filters = state.selectedFilters) {
+    const checkCategory = (questionValue, selectedValues) => {
+        if (selectedValues.length === 0) return true;
+        if (questionValue === null || questionValue === undefined) return false; 
+        if (Array.isArray(questionValue)) {
+            return questionValue.some(val => selectedValues.includes(val));
+        }
+        return selectedValues.includes(questionValue);
+    };
 
-    if (filters.subject.length > 0) {
-        query = query.where('classification.subject').anyOf(filters.subject);
-    }
-    if (filters.topic.length > 0) {
-        query = query.where('classification.topic').anyOf(filters.topic);
-    }
-    if (filters.subTopic.length > 0) {
-        query = query.where('classification.subTopic').anyOf(filters.subTopic);
-    }
-    if (filters.difficulty.length > 0) {
-        query = query.where('properties.difficulty').anyOf(filters.difficulty);
-    }
-    if (filters.questionType.length > 0) {
-        query = query.where('properties.questionType').anyOf(filters.questionType);
-    }
-    if (filters.examName.length > 0) {
-        query = query.where('sourceInfo.examName').anyOf(filters.examName);
-    }
-    if (filters.examYear.length > 0) {
-        query = query.where('sourceInfo.examYear').anyOf(filters.examYear.map(y => parseInt(y, 10)));
-    }
-    if (filters.tags.length > 0) {
-        query = query.where('tags').anyOf(filters.tags);
-    }
-    
-    const filtered = await query.toArray();
+    const filtered = questionList.filter(q => 
+        checkCategory(q.classification?.subject, filters.subject) &&
+        checkCategory(q.classification?.topic, filters.topic) &&
+        checkCategory(q.classification?.subTopic, filters.subTopic) &&
+        checkCategory(q.properties?.difficulty, filters.difficulty) &&
+        checkCategory(q.properties?.questionType, filters.questionType) &&
+        checkCategory(q.sourceInfo?.examName, filters.examName) &&
+        checkCategory(q.sourceInfo?.examYear, filters.examYear) &&
+        checkCategory(q.tags, filters.tags)
+    );
 
-    state.filteredQuestionsMasterList = filtered;
-    updateQuestionCount();
+    if (filters === state.selectedFilters) {
+        state.filteredQuestionsMasterList = filtered;
+        updateQuestionCount();
+    }
     return filtered;
 }
 
-async function updateAllFilterCountsAndAvailability() {
-    for (const filterKey of config.filterKeys) {
-        // Build a base query using all *other* active filters.
-        let baseQuery = db.questions.toCollection();
-        
-        for (const otherKey of config.filterKeys) {
-            if (otherKey === filterKey) continue; // Skip the current filter key
-            const selected = state.selectedFilters[otherKey];
-            if (selected.length > 0) {
-                const valuePath = getQuestionValuePath(otherKey);
-                // Handle year which is a number
-                const values = (otherKey === 'examYear') ? selected.map(y => parseInt(y, 10)) : selected;
-                baseQuery = baseQuery.where(valuePath).anyOf(values);
-            }
-        }
-        
-        // Get all possible unique options for the current filter key, based on the *current* state of other filters.
-        const valuePath = getQuestionValuePath(filterKey);
-        const allOptionsForThisKey = (await baseQuery.clone().uniqueKeys(valuePath)).filter(Boolean);
+function updateAllFilterCountsAndAvailability() {
+    config.filterKeys.forEach(filterKey => {
+        const tempFilters = JSON.parse(JSON.stringify(state.selectedFilters));
+        tempFilters[filterKey] = [];
+        const contextualList = applyFilters(state.allQuestionsMasterList, tempFilters);
 
-        // For each option, clone the base query and get the count.
-        const countPromises = allOptionsForThisKey.map(option => {
-            const valueForQuery = (filterKey === 'examYear') ? parseInt(String(option), 10) : option;
-            return baseQuery.clone().where(valuePath).equals(valueForQuery).count();
-        });
-
-        // Await all the count promises to run them in parallel.
-        const countsArray = await Promise.all(countPromises);
-        
         const counts = {};
-        allOptionsForThisKey.forEach((option, index) => {
-            counts[option] = countsArray[index];
+        contextualList.forEach(q => {
+            const value = getQuestionValue(q, filterKey);
+            if (Array.isArray(value)) {
+                value.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
+            } else if (value) {
+                counts[value] = (counts[value] || 0) + 1;
+            }
         });
 
-        // Update the UI with the new counts.
         updateFilterUI(filterKey, counts);
-    }
+    });
 }
-
 
 function updateFilterUI(filterKey, counts) {
     const { list, segmentedControl } = dom.filterElements[filterKey];
@@ -280,10 +319,7 @@ function updateFilterUI(filterKey, counts) {
             const checkbox = label.querySelector('input');
             const value = checkbox.value;
             const count = counts[value] || 0;
-            const countSpan = label.querySelector('.filter-option-count');
-            if (countSpan) countSpan.textContent = `(${count})`;
-            
-            // Disable option if it yields 0 results AND is not already selected
+            label.querySelector('.filter-option-count').textContent = `(${count})`;
             const isDisabled = count === 0 && !checkbox.checked;
             label.classList.toggle('disabled', isDisabled);
             checkbox.disabled = isDisabled;
@@ -293,23 +329,22 @@ function updateFilterUI(filterKey, counts) {
         segmentedControl.querySelectorAll('.segmented-btn').forEach(btn => {
             const value = btn.dataset.value;
             const count = counts[value] || 0;
-            const countSpan = btn.querySelector('.filter-option-count');
-            if (countSpan) countSpan.textContent = `(${count})`;
+            btn.querySelector('.filter-option-count').textContent = `(${count})`;
             btn.classList.toggle('active', state.selectedFilters[filterKey].includes(value));
         });
     }
 }
 
-function getQuestionValuePath(filterKey) {
+function getQuestionValue(q, filterKey) {
     switch(filterKey) {
-        case 'subject': return 'classification.subject';
-        case 'topic': return 'classification.topic';
-        case 'subTopic': return 'classification.subTopic';
-        case 'difficulty': return 'properties.difficulty';
-        case 'questionType': return 'properties.questionType';
-        case 'examName': return 'sourceInfo.examName';
-        case 'examYear': return 'sourceInfo.examYear';
-        case 'tags': return 'tags';
+        case 'subject': return q.classification?.subject;
+        case 'topic': return q.classification?.topic;
+        case 'subTopic': return q.classification?.subTopic;
+        case 'difficulty': return q.properties?.difficulty;
+        case 'questionType': return q.properties?.questionType;
+        case 'examName': return q.sourceInfo?.examName;
+        case 'examYear': return q.sourceInfo?.examYear;
+        case 'tags': return q.tags;
         default: return null;
     }
 }
@@ -320,7 +355,7 @@ function updateQuestionCount() {
     dom.startQuizBtn.disabled = count === 0;
 }
 
-async function resetFilters() {
+function resetFilters() {
     state.selectedFilters = {
         subject: [], topic: [], subTopic: [], 
         difficulty: [], questionType: [], 
@@ -336,7 +371,7 @@ async function resetFilters() {
          if(elements.searchInput) elements.searchInput.value = '';
          filterMultiSelectList(key);
     });
-    await onFilterStateChange();
+    onFilterStateChange();
 }
 
 function startFilteredQuiz() {
@@ -403,10 +438,7 @@ function updateActiveFiltersSummaryBar() {
             closeBtn.className = 'tag-close-btn';
             closeBtn.innerHTML = '&times;';
             closeBtn.setAttribute('aria-label', `Remove ${value} filter`);
-            closeBtn.onclick = async () => {
-                // Modifying handleSelectionChange to be async requires this await
-                await handleSelectionChange(key, value); 
-            };
+            closeBtn.onclick = () => handleSelectionChange(key, value);
             
             tag.appendChild(closeBtn);
             dom.activeFiltersSummaryBar.appendChild(tag);
@@ -415,8 +447,8 @@ function updateActiveFiltersSummaryBar() {
     dom.activeFiltersSummaryBarContainer.style.display = totalSelected > 0 ? 'block' : 'none';
 }
 
-async function handleQuickStart(preset) {
-    await resetFilters();
+function handleQuickStart(preset) {
+    resetFilters();
     
     switch(preset) {
         case 'quick_25_easy':
@@ -432,12 +464,10 @@ async function handleQuickStart(preset) {
             // No filter applied, will use all questions
             break;
     }
+    applyFilters();
     
-    let questions = await applyFilters();
-    
-    shuffleArray(questions);
-    state.filteredQuestionsMasterList = questions.slice(0, 25);
-    updateQuestionCount();
+    shuffleArray(state.filteredQuestionsMasterList);
+    state.filteredQuestionsMasterList = state.filteredQuestionsMasterList.slice(0, 25);
 
     if (state.filteredQuestionsMasterList.length === 0) {
         Swal.fire({
@@ -446,7 +476,7 @@ async function handleQuickStart(preset) {
             text: 'This quick start preset yielded no questions. Please try another or use the custom filters.', 
             icon: 'warning'
         });
-        await resetFilters();
+        resetFilters();
         return;
     }
 

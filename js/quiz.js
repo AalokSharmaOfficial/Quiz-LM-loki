@@ -3,8 +3,6 @@ import { dom } from './dom.js';
 import { playSound, triggerHapticFeedback, shuffleArray, buildExplanationHtml, Toast } from './utils.js';
 import { typewriterAnimate } from './animations.js';
 import { applyTextZoom } from './settings.js';
-// Fix: Import GoogleGenAI for AI explainer feature.
-import { GoogleGenAI } from "@google/genai";
 
 let appCallbacks = {};
 
@@ -42,25 +40,13 @@ function bindQuizEventListeners() {
     if (submitQuizBtn) submitQuizBtn.onclick = () => submitAndReviewAll();
 }
 
-// Fix: Initialize the Gemini AI client.
 function initializeGemini() {
-    try {
-        if (!process.env.API_KEY) {
-            throw new Error("API_KEY environment variable not set.");
-        }
-        state.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        if (dom.aiExplainerBtn) {
-            dom.aiExplainerBtn.title = "Get an AI-powered explanation.";
-            dom.aiExplainerBtn.style.display = '';
-        }
-    } catch (e) {
-        console.error("Failed to initialize GoogleGenAI:", e.message);
-        if (dom.aiExplainerBtn) {
-            dom.aiExplainerBtn.title = "AI Explainer is not available. Check console for errors.";
-            dom.aiExplainerBtn.style.display = '';
-        }
-        state.ai = null;
+    console.log("AI Explainer feature is for demonstration. A backend proxy is needed for full functionality.");
+    if (dom.aiExplainerBtn) {
+        dom.aiExplainerBtn.title = "Get an AI-powered explanation (requires backend setup).";
+        dom.aiExplainerBtn.style.display = ''; 
     }
+    state.ai = null;
 }
 
 function divideQuestionsIntoGroups(questionsList) {
@@ -582,66 +568,25 @@ function showExplanation() {
     }
 }
 
-// Fix: Implement Gemini API call to get an explanation for the current question.
-async function getGeminiExplanation() {
+function getGeminiExplanation() {
     if (!state.currentQuizData || !dom.aiExplainerBtn) return;
-    
     appCallbacks.showAIExplanation();
-
-    if (!state.ai) {
-        dom.aiExplanationBody.innerHTML = `<div class="ai-error-container">
-            <h3><i class="fas fa-exclamation-triangle"></i> AI Service Not Available</h3>
-            <p>The AI explainer service could not be initialized. Please check your API key and network connection.</p>
-        </div>`;
-        return;
-    }
-
     dom.aiExplainerBtn.disabled = true;
     dom.aiExplainerBtn.classList.add('ai-thinking');
     dom.aiExplanationBody.classList.add('is-loading');
-    dom.aiExplanationBody.innerHTML = `<div class="ai-loading-container"><lottie-player src="https://assets9.lottiefiles.com/packages/lf20_j1adxtyb.json" background="transparent" speed="1" style="width: 200px; height: 200px;" loop autoplay></lottie-player><p>Generating explanation...</p></div>`;
+    dom.aiExplanationBody.innerHTML = `<div class="ai-loading-container"><lottie-player src="https://assets9.lottiefiles.com/packages/lf20_j1adxtyb.json" background="transparent" speed="1" style="width: 200px; height: 200px;" loop autoplay></lottie-player><p>Connecting to AI service...</p></div>`;
 
-    try {
-        const q = state.currentQuizData.shuffledQuestions[state.currentQuizData.currentQuestionIndex];
-        const attempt = state.currentQuizData.attempts.find(a => a.questionId === q.id);
-
-        let prompt = `Explain the following multiple-choice question. Explain why the correct answer is correct and why the other options are incorrect. Format the response in Markdown.
-        
-Question: ${q.question}
-Options:
-${q.options.map((opt, i) => `- ${String.fromCharCode(65 + i)}: ${opt}`).join('\n')}
-        
-Correct Answer: ${q.correct}`;
-
-        if (attempt && attempt.selected !== q.correct && attempt.selected !== "Timed Out" && attempt.selected !== "Skipped") {
-            prompt += `\n\nThe user incorrectly selected: ${attempt.selected}. Explain why this was incorrect.`;
-        }
-
-        const response = await state.ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-        });
-        
-        const explanationText = response.text;
-        
-        // Assuming 'marked' is available globally, as it's used in utils.js
-        const explanationHtml = marked.parse(explanationText);
-
-        dom.aiExplanationBody.classList.remove('is-loading');
-        await typewriterAnimate(dom.aiExplanationBody, explanationHtml, 5);
-
-    } catch (error) {
-        console.error("Error getting Gemini explanation:", error);
+    setTimeout(() => {
         dom.aiExplanationBody.classList.remove('is-loading');
         dom.aiExplanationBody.innerHTML = `<div class="ai-error-container">
-            <h3><i class="fas fa-exclamation-triangle"></i> Error</h3>
-            <p>An error occurred while generating the explanation. Please try again later.</p>
-            <pre>${error.message}</pre>
+            <h3><i class="fas fa-cogs"></i> AI Explainer - Feature Not Active</h3>
+            <p>This feature requires a secure backend proxy to protect the API key. It cannot be called directly from a simple HTML/JS application.</p>
+            <p>To enable this, the app owner will need to set up a serverless function or a small backend to handle API requests securely.</p>
+            <pre>Error: API_KEY cannot be exposed on the client-side.</pre>
         </div>`;
-    } finally {
         dom.aiExplainerBtn.disabled = false;
         dom.aiExplainerBtn.classList.remove('ai-thinking');
-    }
+    }, 1500);
 }
 
 function handleKeyPress(event) {
